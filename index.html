@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=5">
+<link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 
@@ -64,7 +64,7 @@
       <button class="btn btn-primary btn-block" type="submit"><span data-ico="shield"></span>Criar administrador e entrar</button>
     </form>
 
-    <p class="auth-note" id="authNote">Primeiro acesso neste computador: crie a conta de administrador. Depois você poderá cadastrar administradores, professores e operadores.</p>
+    <p class="auth-note" id="authNote">Primeiro acesso neste computador: crie a conta de administrador. Depois você poderá cadastrar administradores, professores, apoio e credenciamento.</p>
   </div>
 </div>
 
@@ -208,6 +208,7 @@
           <div class="lesson-edit" id="lessonEdit" hidden>
             <input id="lessonInput" type="text" maxlength="120" aria-label="Lição do dia">
             <button class="btn btn-primary btn-sm" id="lessonSave"><span data-ico="check"></span>Salvar</button>
+            <button class="btn btn-danger btn-sm" id="lessonDelete" hidden title="Remover lição desta turma"><span data-ico="trash"></span>Remover</button>
           </div>
         </div>
       </section>
@@ -310,11 +311,12 @@
           <fieldset class="field">
             <legend>Papel <i class="req">*</i></legend>
             <div class="chips">
-              <label class="chip chip-op"><input type="radio" name="ufRole" value="user" checked><span class="chip-ico" data-ico="user"></span>Operador</label>
+              <label class="chip chip-op"><input type="radio" name="ufRole" value="user" checked><span class="chip-ico" data-ico="user"></span>Credenciamento</label>
+              <label class="chip chip-apoio"><input type="radio" name="ufRole" value="apoio"><span class="chip-ico" data-ico="users"></span>Apoio</label>
               <label class="chip chip-prof"><input type="radio" name="ufRole" value="prof"><span class="chip-ico" data-ico="book"></span>Professor</label>
               <label class="chip chip-adm"><input type="radio" name="ufRole" value="admin"><span class="chip-ico" data-ico="shield"></span>Administrador</label>
             </div>
-            <small class="opt role-hint">Operadores cadastram e imprimem. Professores também registram a lição do dia. Administradores gerenciam usuários e configurações.</small>
+            <small class="opt role-hint">Credenciamento e apoio cadastram, imprimem etiquetas e chamam no WhatsApp. Professores também registram a lição do dia. Administradores gerenciam usuários e configurações.</small>
           </fieldset>
           <div class="allergy-box active-box" id="ufActiveBox">
             <label class="switch-row" for="ufActive">
@@ -350,13 +352,13 @@
         <div class="allergy-box setting-box">
           <label class="switch-row" for="setCanEdit">
             <span class="switch"><input type="checkbox" id="setCanEdit"><span class="track"><span class="knob"></span></span></span>
-            <span class="switch-text"><strong>Operadores podem editar cadastros</strong><small>Administradores sempre podem.</small></span>
+            <span class="switch-text"><strong>Credenciamento e apoio podem editar cadastros</strong><small>Administradores e professores sempre podem.</small></span>
           </label>
         </div>
         <div class="allergy-box setting-box">
           <label class="switch-row" for="setCanDelete">
             <span class="switch"><input type="checkbox" id="setCanDelete"><span class="track"><span class="knob"></span></span></span>
-            <span class="switch-text"><strong>Operadores podem excluir cadastros</strong><small>Com desfazer logo após a exclusão.</small></span>
+            <span class="switch-text"><strong>Credenciamento e apoio podem excluir cadastros</strong><small>Com desfazer logo após a exclusão.</small></span>
           </label>
         </div>
         <button class="btn btn-primary" id="saveSettings"><span data-ico="check"></span>Salvar configurações</button>
@@ -369,6 +371,6 @@
   <div id="confetti" aria-hidden="true"></div>
 </div>
 <div id="print-root" aria-hidden="true"></div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

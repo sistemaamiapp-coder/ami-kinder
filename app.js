@@ -89,7 +89,7 @@ const GROUPS = {
   junior: { label: 'Junior', ages: '4 a 6 anos' },
   bigger: { label: 'Bigger', ages: '7 a 12 anos' }
 };
-const ROLES = { admin: 'Administrador', prof: 'Professor', user: 'Operador' };
+const ROLES = { admin: 'Administrador', prof: 'Professor', apoio: 'Apoio', user: 'Credenciamento' };
 
 function loadJSON(key, fallback) {
   try {
@@ -139,9 +139,10 @@ function currentUser() {
 }
 function isAdmin() { const u = currentUser(); return !!u && u.role === 'admin'; }
 function isTeacher() { const u = currentUser(); return !!u && (u.role === 'admin' || u.role === 'prof'); }
-function canEdit() { const u = currentUser(); return !!u && (u.role === 'admin' || (u.role === 'user' && settings.userCanEdit)); }
-function canDelete() { const u = currentUser(); return !!u && (u.role === 'admin' || (u.role === 'user' && settings.userCanDelete)); }
-function roleText(role) { return ROLES[role] || 'Operador'; }
+function isStaff() { const u = currentUser(); return !!u && (u.role === 'user' || u.role === 'apoio'); }
+function canEdit() { const u = currentUser(); return !!u && (u.role === 'admin' || (isStaff() && settings.userCanEdit)); }
+function canDelete() { const u = currentUser(); return !!u && (u.role === 'admin' || (isStaff() && settings.userCanDelete)); }
+function roleText(role) { return ROLES[role] || 'Credenciamento'; }
 function activeAdmins() { return users.filter((u) => u.role === 'admin' && u.active); }
 function initials(name) {
   return name.trim().split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase() || '?';
@@ -220,7 +221,7 @@ function showAuth() {
     ? 'Primeiro acesso: crie a conta de administrador deste computador.'
     : 'Entre com seu e-mail e senha para acessar os cadastros.';
   $('#authNote').textContent = first
-    ? 'Depois você poderá cadastrar administradores, professores e operadores em Administração.'
+    ? 'Depois você poderá cadastrar administradores, professores, apoio e credenciamento em Administração.'
     : 'Contas e cadastros ficam salvos neste navegador/computador.';
   $('#errLogin').textContent = '';
   $('#errSetup').textContent = '';
@@ -237,6 +238,7 @@ function enterApp() {
   $('#userAvatar').textContent = initials(u.name);
   $('#userAvatar').classList.toggle('av-admin', u.role === 'admin');
   $('#userAvatar').classList.toggle('av-prof', u.role === 'prof');
+  $('#userAvatar').classList.toggle('av-apoio', u.role === 'apoio');
   $('#adminBtn').hidden = u.role !== 'admin';
   applySettingsText();
   render();
@@ -791,8 +793,8 @@ function renderUsers() {
   $('#usersList').innerHTML = users.map((u) => {
     const self = me && u.id === me.id;
     const lastAdmin = u.role === 'admin' && u.active && admins === 1;
-    const roleClass = u.role === 'admin' ? 'badge-admin' : u.role === 'prof' ? 'badge-prof' : 'badge-user';
-    const avClass = u.role === 'admin' ? ' av-admin' : u.role === 'prof' ? ' av-prof' : '';
+    const roleClass = u.role === 'admin' ? 'badge-admin' : u.role === 'prof' ? 'badge-prof' : u.role === 'apoio' ? 'badge-apoio' : 'badge-user';
+    const avClass = u.role === 'admin' ? ' av-admin' : u.role === 'prof' ? ' av-prof' : u.role === 'apoio' ? ' av-apoio' : '';
     const badges = '<span class="badge ' + roleClass + '">' + roleText(u.role) + '</span>' +
       (u.active ? '' : '<span class="badge badge-off">Desativado</span>') +
       (self ? '<span class="badge badge-ok">Você</span>' : '');
@@ -940,6 +942,7 @@ function renderLesson() {
   $('#lessonMeta').textContent = l ? 'Atualizada por ' + l.by + ' · ' + fmtDate(l.at) : '';
   $('#lessonEdit').hidden = !canSet;
   $('#lessonInput').value = l ? l.text : '';
+  $('#lessonDelete').hidden = !(canSet && l);
 }
 document.querySelectorAll('#lessonTabs .ltab').forEach((t) => t.addEventListener('click', () => {
   lessonTab = t.dataset.lessonTab;
@@ -960,6 +963,24 @@ $('#lessonSave').addEventListener('click', () => {
 });
 $('#lessonInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { e.preventDefault(); $('#lessonSave').click(); }
+});
+$('#lessonDelete').addEventListener('click', () => {
+  if (!isTeacher()) return;
+  const l = lessons[lessonTab];
+  if (!l) return;
+  delete lessons[lessonTab];
+  saveLessons();
+  renderLesson();
+  toast('Lição do ' + GROUPS[lessonTab].label + ' removida.', {
+    danger: true,
+    actionLabel: 'Desfazer',
+    onAction: () => {
+      lessons[lessonTab] = l;
+      saveLessons();
+      renderLesson();
+      toast('Lição do ' + GROUPS[lessonTab].label + ' restaurada.');
+    }
+  });
 });
 
 /* ---------- global keys ---------- */
