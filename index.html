@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Credenciamento AMi Kinder</title>
+<meta name="description" content="Cadastro de crianças e impressão de etiquetas 100×30 mm do ministério infantil AMi Kinder.">
+<link rel="icon" type="image/jpeg" href="assets/ami-kinder.jpg">
+<link rel="apple-touch-icon" href="assets/ami-kinder.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=5">
+</head>
+<body>
+
+<div id="authScreen" class="auth">
+  <div class="auth-card">
+    <img class="auth-logo" src="assets/ami-kinder.jpg" alt="Logo AMi Kinder">
+    <h1 class="auth-title">
+      <span class="t-cred">Credenciamento</span>
+      <span class="t-ami" aria-label="AMi Kinder"><b class="c1">A</b><b class="c2">M</b><b class="c3">i</b><b class="c4">K</b><b class="c5">i</b><b class="c6">n</b><b class="c1">d</b><b class="c2">e</b><b class="c6">r</b></span>
+    </h1>
+    <div class="rainbow" aria-hidden="true"></div>
+    <p class="auth-sub" id="authSub">Entre com seu e-mail e senha para acessar os cadastros.</p>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="loginUser">E-mail</label>
+        <input id="loginUser" type="text" autocomplete="username" maxlength="60">
+      </div>
+      <div class="field">
+        <label for="loginPass">Senha</label>
+        <div class="pass-wrap">
+          <input id="loginPass" type="password" autocomplete="current-password" placeholder="Sua senha" maxlength="60">
+          <button type="button" class="eye" data-eye="loginPass" aria-label="Mostrar ou ocultar senha"></button>
+        </div>
+      </div>
+      <small class="err" id="errLogin"></small>
+      <button class="btn btn-primary btn-block" type="submit"><span data-ico="login"></span>Entrar</button>
+    </form>
+
+    <form id="setupForm" hidden novalidate>
+      <div class="field">
+        <label for="setupName">Seu nome <i class="req">*</i></label>
+        <input id="setupName" type="text" autocomplete="name" maxlength="50">
+      </div>
+      <div class="field">
+        <label for="setupUser">E-mail do administrador <i class="req">*</i></label>
+        <input id="setupUser" type="text" autocomplete="username" maxlength="60">
+      </div>
+      <div class="field">
+        <label for="setupPass">Senha <i class="req">*</i></label>
+        <div class="pass-wrap">
+          <input id="setupPass" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres" maxlength="60">
+          <button type="button" class="eye" data-eye="setupPass" aria-label="Mostrar ou ocultar senha"></button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="setupPass2">Confirme a senha <i class="req">*</i></label>
+        <input id="setupPass2" type="password" autocomplete="new-password" placeholder="Repita a senha" maxlength="60">
+      </div>
+      <small class="err" id="errSetup"></small>
+      <button class="btn btn-primary btn-block" type="submit"><span data-ico="shield"></span>Criar administrador e entrar</button>
+    </form>
+
+    <p class="auth-note" id="authNote">Primeiro acesso neste computador: crie a conta de administrador. Depois você poderá cadastrar administradores, professores e operadores.</p>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <img class="logo" src="assets/ami-kinder.jpg" alt="Logo AMi Kinder">
+      <div class="brand">
+        <h1>
+          <span class="t-cred">Credenciamento</span>
+          <span class="t-ami" aria-label="AMi Kinder"><b class="c1">A</b><b class="c2">M</b><b class="c3">i</b><b class="c4">K</b><b class="c5">i</b><b class="c6">n</b><b class="c1">d</b><b class="c2">e</b><b class="c6">r</b></span>
+        </h1>
+        <div class="rainbow" aria-hidden="true"></div>
+        <small id="topSub">Ministério Infantil</small>
+      </div>
+      <div class="stats">
+        <span class="stat" id="statTotal" title="Crianças cadastradas">0 crianças</span>
+        <span class="stat stat-allergy" id="statAllergy" title="Crianças com alergia">0 com alergia</span>
+      </div>
+      <div class="user-area">
+        <button class="btn btn-ghost btn-sm" id="adminBtn" hidden><span data-ico="shield"></span><span class="admin-btn-text">Administração</span></button>
+        <span class="user-chip" id="userChip" title="Usuário conectado">
+          <span class="avatar" id="userAvatar"></span>
+          <span class="user-meta"><strong id="userName"></strong><small id="userRole"></small></span>
+        </span>
+        <button class="icon-btn" id="logoutBtn" title="Sair" aria-label="Sair da conta"><span data-ico="logout"></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card form-card" id="formCard" aria-labelledby="formTitle">
+      <div class="card-head">
+        <span class="head-icon head-green" id="formIcon"></span>
+        <div>
+          <h2 id="formTitle">Cadastro de criança</h2>
+          <p id="formSub">Preencha os dados e gere a etiqueta na hora.</p>
+        </div>
+      </div>
+
+      <form id="regForm" novalidate>
+        <div class="field">
+          <label for="childName">Nome da criança <i class="req">*</i></label>
+          <input id="childName" name="childName" type="text" autocomplete="off" maxlength="60">
+          <small class="err" id="errChild"></small>
+        </div>
+
+        <fieldset class="field">
+          <legend>Turma <i class="req">*</i></legend>
+          <div class="chips" id="groupChips">
+            <label class="chip chip-berg"><input type="radio" name="group" value="bercario">Berçário <small class="chip-age">0–3</small></label>
+            <label class="chip chip-junior"><input type="radio" name="group" value="junior">Junior <small class="chip-age">4–6</small></label>
+            <label class="chip chip-bigger"><input type="radio" name="group" value="bigger">Bigger <small class="chip-age">7–12</small></label>
+          </div>
+          <small class="err" id="errGroup"></small>
+        </fieldset>
+
+        <div class="field">
+          <label for="guardianName">Nome do responsável <i class="req">*</i></label>
+          <input id="guardianName" name="guardianName" type="text" autocomplete="off" maxlength="60">
+          <small class="err" id="errGuardian"></small>
+        </div>
+
+        <div class="field">
+          <label for="guardianPhone">Telefone do responsável <i class="req" id="phoneReq">*</i></label>
+          <input id="guardianPhone" name="guardianPhone" type="tel" inputmode="tel" autocomplete="off" placeholder="(11) 99999-9999" maxlength="16">
+          <small class="err" id="errPhone"></small>
+        </div>
+
+        <fieldset class="field">
+          <legend>O responsável é <i class="req">*</i></legend>
+          <div class="chips" id="relChips">
+            <label class="chip chip-pai"><input type="radio" name="relationship" value="pai"><span class="chip-ico" data-ico="user"></span>Pai</label>
+            <label class="chip chip-mae"><input type="radio" name="relationship" value="mae"><span class="chip-ico" data-ico="user"></span>Mãe</label>
+            <label class="chip chip-outros"><input type="radio" name="relationship" value="outros"><span class="chip-ico" data-ico="users"></span>Outros</label>
+          </div>
+          <small class="err" id="errRel"></small>
+          <div class="other-wrap" id="otherWrap" hidden>
+            <label for="otherRel">Quem? <span class="opt">(opcional)</span></label>
+            <input id="otherRel" type="text" maxlength="30">
+          </div>
+        </fieldset>
+
+        <div class="allergy-box" id="allergyBox">
+          <label class="switch-row" for="hasAllergy">
+            <span class="switch">
+              <input type="checkbox" id="hasAllergy">
+              <span class="track"><span class="knob"></span></span>
+            </span>
+            <span class="switch-text">
+              <strong>Possui alergia?</strong>
+              <small>Marque e descreva para destacar na etiqueta.</small>
+            </span>
+          </label>
+          <div class="allergy-details" id="allergyDetails" hidden>
+            <div class="quick-chips" id="quickChips">
+              <button type="button" data-al="Amendoim">Amendoim</button>
+              <button type="button" data-al="Leite / lactose">Leite / lactose</button>
+              <button type="button" data-al="Ovo">Ovo</button>
+              <button type="button" data-al="Glúten">Glúten</button>
+              <button type="button" data-al="Medicamentos">Medicamentos</button>
+              <button type="button" data-al="Picada de inseto">Picada de inseto</button>
+            </div>
+            <label for="allergyDesc">Qual alergia? <i class="req">*</i></label>
+            <textarea id="allergyDesc" rows="2" maxlength="120"></textarea>
+            <small class="err" id="errAllergy"></small>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="foodNote">Observação alimentar <span class="opt">(opcional)</span></label>
+          <input id="foodNote" type="text" maxlength="80">
+          <small class="opt">Sobre a alimentação no culto; aparece na etiqueta.</small>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submitBtn"><span data-ico="plus"></span><span id="submitLabel">Cadastrar criança</span></button>
+          <button type="button" class="btn btn-ghost" id="cancelEdit" hidden>Cancelar edição</button>
+        </div>
+      </form>
+    </section>
+
+    <div class="main-col">
+      <section class="card lesson-card" aria-labelledby="lessonTitle">
+        <div class="card-head">
+          <span class="head-icon head-amber" data-ico="book"></span>
+          <div>
+            <h2 id="lessonTitle">Lição do dia</h2>
+            <p id="lessonDate">Hoje</p>
+          </div>
+        </div>
+        <div class="lesson-tabs" id="lessonTabs" role="tablist" aria-label="Turmas">
+          <button class="ltab active" data-lesson-tab="bercario" role="tab">Berçário <small>0–3</small></button>
+          <button class="ltab" data-lesson-tab="junior" role="tab">Junior <small>4–6</small></button>
+          <button class="ltab" data-lesson-tab="bigger" role="tab">Bigger <small>7–12</small></button>
+        </div>
+        <div class="lesson-body">
+          <p class="lesson-empty" id="lessonEmpty">Nenhuma lição registrada para esta turma.</p>
+          <p class="lesson-text" id="lessonText" hidden></p>
+          <p class="lesson-meta" id="lessonMeta" hidden></p>
+          <div class="lesson-edit" id="lessonEdit" hidden>
+            <input id="lessonInput" type="text" maxlength="120" aria-label="Lição do dia">
+            <button class="btn btn-primary btn-sm" id="lessonSave"><span data-ico="check"></span>Salvar</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card list-card" aria-labelledby="listTitle">
+      <div class="card-head list-head">
+        <span class="head-icon head-blue" data-ico="users"></span>
+        <div>
+          <h2 id="listTitle">Crianças cadastradas</h2>
+          <p id="listCount">0 registros</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span data-ico="search"></span>
+          <input id="search" type="search" placeholder="Buscar por criança, responsável, telefone ou código…" aria-label="Buscar cadastros">
+        </div>
+        <select id="filterAllergy" aria-label="Filtrar por alergia">
+          <option value="all">Todas</option>
+          <option value="allergy">Com alergia</option>
+          <option value="noallergy">Sem alergia</option>
+        </select>
+        <select id="sortBy" aria-label="Ordenar lista">
+          <option value="recent">Mais recentes</option>
+          <option value="name">Nome A–Z</option>
+          <option value="code">Código</option>
+        </select>
+      </div>
+      <div class="toolbar toolbar-print">
+        <button class="btn btn-blue btn-sm" id="printSelected" disabled><span data-ico="printer"></span>Imprimir selecionadas <span class="count-pill" id="selCount">0</span></button>
+        <button class="btn btn-ghost btn-sm" id="printAll"><span data-ico="printer"></span>Imprimir lista <span class="count-pill" id="allCount">0</span></button>
+      </div>
+
+      <div class="example-banner" id="exampleBanner" hidden>
+        <span data-ico="info"></span>
+        <p>Estes são <strong>dados de exemplo</strong> para você conhecer o app. Cadastre a primeira criança ou remova-os.</p>
+        <button class="btn btn-ghost btn-sm" id="removeExamples">Remover exemplos</button>
+      </div>
+
+      <div class="rows" id="rows"></div>
+      <div class="empty" id="emptyState" hidden>
+        <span class="empty-heart" data-ico="heart"></span>
+        <h3>Nenhuma criança por aqui</h3>
+        <p id="emptyMsg">Cadastre a primeira criança no formulário para gerar a etiqueta.</p>
+      </div>
+    </section>
+    </div>
+  </main>
+
+  <footer class="foot" id="foot">Credenciamento AMi Kinder · feito com carinho para o ministério infantil</footer>
+
+  <div class="overlay" id="drawerOverlay"></div>
+  <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-label="Detalhes do cadastro"></aside>
+
+  <div class="overlay overlay-admin" id="adminOverlay"></div>
+  <section class="admin" id="adminPanel" role="dialog" aria-modal="true" aria-label="Administração">
+    <div class="admin-head">
+      <span class="head-icon head-purple" data-ico="shield"></span>
+      <div class="grow">
+        <h2>Administração</h2>
+        <p>Usuários, permissões e configurações do app.</p>
+      </div>
+      <button class="icon-btn" id="adminClose" aria-label="Fechar administração"><span data-ico="x"></span></button>
+    </div>
+    <div class="admin-tabs" role="tablist">
+      <button class="tab active" data-tab="users" role="tab" aria-selected="true"><span data-ico="users"></span>Usuários</button>
+      <button class="tab" data-tab="settings" role="tab" aria-selected="false"><span data-ico="sliders"></span>Configurações</button>
+    </div>
+    <div class="admin-body">
+      <div id="tabUsers">
+        <div id="userListView">
+          <div class="users-toolbar">
+            <p id="usersCount"></p>
+            <button class="btn btn-primary btn-sm" id="newUserBtn"><span data-ico="plus"></span>Novo usuário</button>
+          </div>
+          <div class="users-list" id="usersList"></div>
+        </div>
+        <form id="userForm" hidden novalidate>
+          <h3 id="userFormTitle">Novo usuário</h3>
+          <div class="field">
+            <label for="ufName">Nome <i class="req">*</i></label>
+            <input id="ufName" type="text" maxlength="50">
+          </div>
+          <div class="field">
+            <label for="ufUser">E-mail <i class="req">*</i></label>
+            <input id="ufUser" type="text" maxlength="60" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="ufPass" id="ufPassLabel">Senha <i class="req">*</i></label>
+            <div class="pass-wrap">
+              <input id="ufPass" type="password" placeholder="Mínimo de 6 caracteres" maxlength="60" autocomplete="new-password">
+              <button type="button" class="eye" data-eye="ufPass" aria-label="Mostrar ou ocultar senha"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="ufPass2" id="ufPass2Label">Confirme a senha <i class="req">*</i></label>
+            <input id="ufPass2" type="password" placeholder="Repita a senha" maxlength="60" autocomplete="new-password">
+          </div>
+          <fieldset class="field">
+            <legend>Papel <i class="req">*</i></legend>
+            <div class="chips">
+              <label class="chip chip-op"><input type="radio" name="ufRole" value="user" checked><span class="chip-ico" data-ico="user"></span>Operador</label>
+              <label class="chip chip-prof"><input type="radio" name="ufRole" value="prof"><span class="chip-ico" data-ico="book"></span>Professor</label>
+              <label class="chip chip-adm"><input type="radio" name="ufRole" value="admin"><span class="chip-ico" data-ico="shield"></span>Administrador</label>
+            </div>
+            <small class="opt role-hint">Operadores cadastram e imprimem. Professores também registram a lição do dia. Administradores gerenciam usuários e configurações.</small>
+          </fieldset>
+          <div class="allergy-box active-box" id="ufActiveBox">
+            <label class="switch-row" for="ufActive">
+              <span class="switch">
+                <input type="checkbox" id="ufActive" checked>
+                <span class="track"><span class="knob"></span></span>
+              </span>
+              <span class="switch-text">
+                <strong>Usuário ativo</strong>
+                <small>Usuários desativados não conseguem entrar.</small>
+              </span>
+            </label>
+          </div>
+          <small class="err" id="errUserForm"></small>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" id="ufSave"><span data-ico="check"></span>Salvar usuário</button>
+            <button type="button" class="btn btn-ghost" id="ufCancel">Cancelar</button>
+          </div>
+        </form>
+      </div>
+      <div id="tabSettings" hidden>
+        <div class="field">
+          <label for="setMinistry">Nome do ministério</label>
+          <input id="setMinistry" type="text" maxlength="40">
+          <small class="opt">Aparece no topo do app e no rodapé.</small>
+        </div>
+        <div class="allergy-box setting-box">
+          <label class="switch-row" for="setPhoneReq">
+            <span class="switch"><input type="checkbox" id="setPhoneReq"><span class="track"><span class="knob"></span></span></span>
+            <span class="switch-text"><strong>Telefone obrigatório no cadastro</strong><small>Exige telefone do responsável para salvar.</small></span>
+          </label>
+        </div>
+        <div class="allergy-box setting-box">
+          <label class="switch-row" for="setCanEdit">
+            <span class="switch"><input type="checkbox" id="setCanEdit"><span class="track"><span class="knob"></span></span></span>
+            <span class="switch-text"><strong>Operadores podem editar cadastros</strong><small>Administradores sempre podem.</small></span>
+          </label>
+        </div>
+        <div class="allergy-box setting-box">
+          <label class="switch-row" for="setCanDelete">
+            <span class="switch"><input type="checkbox" id="setCanDelete"><span class="track"><span class="knob"></span></span></span>
+            <span class="switch-text"><strong>Operadores podem excluir cadastros</strong><small>Com desfazer logo após a exclusão.</small></span>
+          </label>
+        </div>
+        <button class="btn btn-primary" id="saveSettings"><span data-ico="check"></span>Salvar configurações</button>
+        <p class="admin-note">Contas, senhas (protegidas por hash), cadastros e configurações ficam salvos neste navegador/computador.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div id="confetti" aria-hidden="true"></div>
+</div>
+<div id="print-root" aria-hidden="true"></div>
+<script src="app.js?v=5"></script>
+</body>
+</html>
