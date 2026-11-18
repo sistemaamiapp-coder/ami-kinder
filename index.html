@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=8">
+<link rel="stylesheet" href="styles.css?v=9">
 </head>
 <body>
 
@@ -343,7 +343,17 @@
           <label class="report-month" for="reportMonth"><span>Mês do relatório</span>
             <select id="reportMonth"></select>
           </label>
-          <button class="btn btn-primary btn-sm" id="reportPrint"><span data-ico="printer"></span>Imprimir / PDF</button>
+          <div class="report-actions">
+            <div class="report-export">
+              <button type="button" class="btn btn-ghost btn-sm" id="reportExport" aria-haspopup="true" aria-expanded="false" aria-controls="reportExportMenu"><span data-ico="download"></span>Exportar</button>
+              <div class="report-menu" id="reportExportMenu" hidden>
+                <button type="button" data-export="png"><span data-ico="image"></span><span><strong>Imagem para apresentação</strong><small>PNG em alta resolução do mês</small></span></button>
+                <button type="button" data-export="pdf"><span data-ico="printer"></span><span><strong>PDF em A4</strong><small>Abre a impressão para salvar em PDF</small></span></button>
+                <button type="button" data-export="csv"><span data-ico="sheet"></span><span><strong>Planilha (CSV)</strong><small>Detalhes para Excel ou Google Sheets</small></span></button>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-sm" id="reportPrint"><span data-ico="printer"></span>Imprimir / PDF</button>
+          </div>
         </div>
         <div class="rep-cards" id="repCards"></div>
         <div class="rep-grid">
@@ -364,7 +374,7 @@
           <h3>Detalhes dos cadastros <small id="repTableCount"></small></h3>
           <div class="rep-table-wrap"><table class="rep-table" id="repTable"></table></div>
         </div>
-        <p class="admin-note">O relatório usa os cadastros salvos neste aparelho. Para apresentações, use "Imprimir / PDF" e escolha "Salvar como PDF".</p>
+        <p class="admin-note">O relatório usa os cadastros salvos neste aparelho. Use "Exportar" para gerar imagem (PNG), PDF em A4 ou planilha (CSV).</p>
       </div>
       <div id="tabSettings" hidden>
         <div class="field">
@@ -401,6 +411,6 @@
 </div>
 <div id="print-root" aria-hidden="true"></div>
 <div id="reportRoot" aria-hidden="true"></div>
-<script src="app.js?v=8"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

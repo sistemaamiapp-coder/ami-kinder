@@ -26,7 +26,10 @@ const ICONS = {
   whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>',
   utensils: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',
-  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><rect x="7" y="12" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="9" rx="1"/><rect x="17" y="6" width="3" height="11" rx="1"/></svg>'
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><rect x="7" y="12" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="9" rx="1"/><rect x="17" y="6" width="3" height="11" rx="1"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 20h16"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 15-4.5-4.5L7 20"/></svg>',
+  sheet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10M15 10v10"/></svg>'
 };
 
 /* ---------- contas na nuvem (Supabase) ---------- */
@@ -1138,6 +1141,298 @@ $('#reportPrint').addEventListener('click', () => {
   window.addEventListener('afterprint', cleanup);
   window.print();
 });
+
+/* ---------- report export: menu, CSV e PNG ---------- */
+function closeExportMenu() {
+  const menu = $('#reportExportMenu');
+  if (!menu || menu.hidden) return;
+  menu.hidden = true;
+  $('#reportExport').setAttribute('aria-expanded', 'false');
+}
+$('#reportExport').addEventListener('click', (e) => {
+  e.stopPropagation();
+  const menu = $('#reportExportMenu');
+  const open = menu.hidden;
+  menu.hidden = !open;
+  if (open) {
+    menu.style.left = '';
+    menu.style.right = '';
+    const r = menu.getBoundingClientRect();
+    if (r.left < 8) { menu.style.right = 'auto'; menu.style.left = '0'; }
+    else if (r.right > window.innerWidth - 8) { menu.style.left = 'auto'; menu.style.right = '0'; }
+  }
+  $('#reportExport').setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.report-export')) closeExportMenu();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeExportMenu();
+});
+$('#reportExportMenu').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-export]');
+  if (!btn || !isAdmin()) return;
+  closeExportMenu();
+  if (btn.dataset.export === 'pdf') { $('#reportPrint').click(); return; }
+  if (btn.dataset.export === 'csv') { exportReportCSV(); return; }
+  if (btn.dataset.export === 'png') exportReportPNG();
+});
+function downloadFile(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+function exportReportCSV() {
+  const list = recordsOfMonth(reportMonth);
+  const cell = (v) => {
+    const t = v == null ? '' : String(v);
+    return /[;"\r\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+  };
+  const head = ['Data', 'Código', 'Criança', 'Turma', 'Responsável', 'Vínculo', 'Telefone', 'Alergia', 'Observação alimentar'];
+  const rows = list.map((r) => {
+    const d = new Date(r.createdAt);
+    return [
+      d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      r.code, r.childName, groupLabel(r) || '', r.guardianName, relText(r), r.guardianPhone || '',
+      r.hasAllergy ? 'Sim — ' + (r.allergyDesc || '') : 'Não',
+      r.foodNote && r.foodNote.trim() ? r.foodNote.trim() : ''
+    ];
+  });
+  const csv = '\uFEFF' + [head, ...rows].map((row) => row.map(cell).join(';')).join('\r\n');
+  downloadFile(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'relatorio-ami-kinder-' + reportMonth + '.csv');
+  toast('Planilha exportada.');
+}
+async function exportReportPNG() {
+  const list = recordsOfMonth(reportMonth);
+  const s = reportStats(list);
+  const now = new Date();
+  const S = 2, W = 794, PAD = 40, CW = W - PAD * 2;
+  const INK = '#20301b', MUTED = '#5c6b57', G900 = '#1c5a10', G700 = '#2f7d18', LINE = '#dbead0';
+  const sans = '"Nunito","Segoe UI",Arial,sans-serif';
+  const head = '"Baloo 2","Nunito","Segoe UI",Arial,sans-serif';
+  const F = (w, px, fam) => w + ' ' + px + 'px ' + (fam || sans);
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  const rr = (x, y, w, h, r) => {
+    ctx.beginPath();
+    if (ctx.roundRect) { ctx.roundRect(x, y, w, h, r); return; }
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  };
+  const box = (x, y, w, h, r, fill, stroke) => {
+    rr(x, y, w, h, r);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+  };
+  const text = (str, x, y, font, color, align) => {
+    ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.fillText(str, x, y);
+  };
+  const sectionTitle = (str, x, y, w) => {
+    text(str.toUpperCase(), x, y, F(800, 10.5), G900);
+    ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, y + 4); ctx.lineTo(x + w, y + 4); ctx.stroke();
+    return y + 18;
+  };
+  const gradient = (x, y, w, h, c1, c2) => {
+    const g = ctx.createLinearGradient(x, y + h, x, y);
+    g.addColorStop(0, c1); g.addColorStop(1, c2);
+    return g;
+  };
+  const wrap = (str, width, font) => {
+    ctx.font = font;
+    const words = String(str == null ? '' : str).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let cur = '';
+    words.forEach((w) => {
+      const t = cur ? cur + ' ' + w : w;
+      if (!cur || ctx.measureText(t).width <= width) cur = t;
+      else { lines.push(cur); cur = w; }
+    });
+    if (cur || !lines.length) lines.push(cur);
+    return lines;
+  };
+
+  const tableFont = F(700, 8.6);
+  const cols = [
+    { key: 'when', w: 76 }, { key: 'code', w: 46 }, { key: 'child', w: 102 }, { key: 'group', w: 54 },
+    { key: 'guardian', w: 102 }, { key: 'rel', w: 55 }, { key: 'phone', w: 66 }, { key: 'allergy', w: 108 }, { key: 'food', w: 105 }
+  ];
+  const cells = list.map((r) => {
+    const d = new Date(r.createdAt);
+    const vals = {
+      when: d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+      code: r.code, child: r.childName, group: groupLabel(r) || '—', guardian: r.guardianName,
+      rel: relText(r), phone: r.guardianPhone || '—',
+      allergy: r.hasAllergy ? 'Sim — ' + (r.allergyDesc || '') : 'Não',
+      food: r.foodNote && r.foodNote.trim() ? r.foodNote.trim() : '—'
+    };
+    return cols.map((c) => wrap(vals[c.key], c.w - 10, tableFont));
+  });
+  const rowH = (lines) => Math.max(...lines.map((l) => l.length)) * 11.5 + 9;
+  const rowsH = cells.reduce((acc, cs) => acc + rowH(cs), 0);
+  const emptyH = list.length ? 0 : 30;
+  const HEADER_H = 56, STATS_H = 58, BARS_H = 132, TWO_H = 104;
+  const yStats = PAD + HEADER_H + 20;
+  const yChart = yStats + STATS_H + 20;
+  const yBars = yChart + 12;
+  const yTwo = yBars + BARS_H + 18;
+  const yTable = yTwo + TWO_H + 18;
+  const yRows = yTable + 20;
+  const yFoot = yRows + rowsH + emptyH + 20;
+  const H = yFoot + 26 + PAD;
+
+  canvas.width = W * S;
+  canvas.height = H * S;
+  ctx.scale(S, S);
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, W, H);
+
+  let logo = null;
+  if (/^https?:/.test(location.protocol)) {
+    logo = await new Promise((res) => {
+      const im = new Image();
+      im.onload = () => res(im);
+      im.onerror = () => res(null);
+      im.src = 'assets/ami-kinder.jpg';
+    });
+  }
+  if (logo) {
+    ctx.save(); rr(PAD, PAD, 54, 54, 12); ctx.clip();
+    ctx.drawImage(logo, PAD, PAD, 54, 54); ctx.restore();
+  }
+  const hx = PAD + (logo ? 68 : 0);
+  text('Credenciamento AMi Kinder', hx, PAD + 26, F(800, 17, head), G900);
+  text(settings.ministry, hx, PAD + 42, F(700, 10), '#555');
+  text('Relatório mensal', W - PAD, PAD + 18, F(800, 13, head), G900, 'right');
+  text(monthTitle(reportMonth), W - PAD, PAD + 33, F(800, 11), INK, 'right');
+  text('Gerado em ' + now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), W - PAD, PAD + 47, F(700, 8.5), '#666', 'right');
+  ctx.strokeStyle = G700; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(PAD, PAD + HEADER_H + 6); ctx.lineTo(W - PAD, PAD + HEADER_H + 6); ctx.stroke();
+
+  const statW = (CW - 32) / 5;
+  [['Crianças no mês', s.total], ['Total cadastrado', records.length], ['Com alergia', s.allergy], ['Observação alimentar', s.food], ['Com WhatsApp', s.whats]]
+    .forEach((st, i) => {
+      const x = PAD + i * (statW + 8);
+      box(x, yStats, statW, STATS_H, 10, '#f4faed', LINE);
+      text(String(st[1]), x + 12, yStats + 26, F(800, 18, head), G700);
+      text(st[0], x + 12, yStats + 43, F(800, 8.5), '#555');
+    });
+
+  sectionTitle('Crianças cadastradas por mês', PAD, yChart, CW);
+  const ymList = lastMonths(12);
+  const counts = ymList.map((ym) => records.filter((r) => r.createdAt && ymOf(r.createdAt) === ym).length);
+  const maxN = Math.max(1, ...counts);
+  const gap = 6, slot = (CW - gap * 11) / 12;
+  const trackTop = yBars + 8, trackBot = yBars + BARS_H - 16;
+  ymList.forEach((ym, i) => {
+    const cx = PAD + i * (slot + gap) + slot / 2;
+    const tw = 34;
+    const pct = counts[i] / maxN;
+    const active = ym === reportMonth;
+    const hFill = Math.max(2, Math.round(pct * (trackBot - trackTop)));
+    const parts = ym.split('-').map(Number);
+    const lbl = MONTH_NAMES[parts[1] - 1].slice(0, 3) + (parts[1] === 1 ? '/' + String(parts[0]).slice(2) : '');
+    text(String(counts[i]), cx, trackTop - 2, F(800, 8), active ? '#fb8500' : MUTED, 'center');
+    box(cx - tw / 2, trackTop, tw, trackBot - trackTop, 8, '#f0f7e8');
+    ctx.save();
+    rr(cx - tw / 2, trackBot - hFill, tw, hFill, 8);
+    ctx.fillStyle = active ? gradient(0, trackBot - hFill, tw, hFill, '#ffb703', '#fb8500') : gradient(0, trackBot - hFill, tw, hFill, '#7ac943', '#52b31e');
+    ctx.fill();
+    ctx.restore();
+    text(lbl, cx, trackBot + 12, F(800, 7.5), MUTED, 'center');
+  });
+
+  const colW = (CW - 24) / 2;
+  sectionTitle('Por turma', PAD, yTwo, colW);
+  const classRows = ['bercario', 'junior', 'bigger'].map((g) => ({ key: g, label: GROUPS[g].label, n: s.groups[g] }));
+  if (s.groups.none) classRows.push({ key: 'none', label: 'Sem turma', n: s.groups.none });
+  const classColors = { bercario: ['#ffb703', '#fb8500'], junior: ['#1e88e5', '#5db3f0'], bigger: ['#8338ec', '#b07cf7'], none: ['#c9d6c2', '#c9d6c2'] };
+  classRows.forEach((r, i) => {
+    const y = yTwo + 12 + i * 22;
+    const totalN = Math.max(1, list.length);
+    const pct = Math.round((r.n / totalN) * 100);
+    text(r.label, PAD, y + 9, F(800, 9), INK);
+    const tx = PAD + 56, tw = colW - 56 - 26;
+    box(tx, y + 2, tw, 10, 5, '#f0f7e8');
+    if (r.n) {
+      const fw = Math.max(3, Math.round((pct / 100) * tw));
+      ctx.save(); rr(tx, y + 2, fw, 10, 5); ctx.fillStyle = gradient(tx, y + 2, fw, 10, classColors[r.key][0], classColors[r.key][1]); ctx.fill(); ctx.restore();
+    }
+    text(String(r.n), PAD + colW, y + 9, F(800, 9), INK, 'right');
+  });
+  const rx = PAD + colW + 24;
+  sectionTitle('Lição do dia', rx, yTwo, colW);
+  const tagColors = { bercario: ['#ffb703', '#fb8500'], junior: ['#1e88e5', '#5db3f0'], bigger: ['#8338ec', '#b07cf7'] };
+  Object.keys(GROUPS).forEach((g, i) => {
+    const y = yTwo + 12 + i * 22;
+    const tg = tagColors[g];
+    ctx.font = F(800, 7.5);
+    const tagW = ctx.measureText(GROUPS[g].label).width + 14;
+    ctx.save(); rr(rx, y, tagW, 13, 6);
+    ctx.fillStyle = gradient(rx, y, tagW, 13, tg[0], tg[1]); ctx.fill();
+    ctx.restore();
+    text(GROUPS[g].label, rx + tagW / 2, y + 9.5, F(800, 7.5), '#fff', 'center');
+    const l = lessons[g];
+    if (l) {
+      text(l.text, rx + tagW + 8, y + 9.5, F(700, 9), INK);
+      text(l.by + ' · ' + fmtDate(l.at), rx + colW, y + 9.5, F(700, 7.5), MUTED, 'right');
+    } else {
+      text('Sem lição registrada', rx + tagW + 8, y + 9.5, F(700, 9), MUTED);
+    }
+  });
+
+  sectionTitle('Detalhes dos cadastros — ' + monthTitle(reportMonth), PAD, yTable, CW);
+  box(PAD, yRows, CW, 20, 6, '#f4faed');
+  let cx0 = PAD;
+  const heads = ['Data', 'Código', 'Criança', 'Turma', 'Responsável', 'Vínculo', 'Telefone', 'Alergia', 'Alimentação'];
+  heads.forEach((h, i) => {
+    text(h.toUpperCase(), cx0 + 5, yRows + 13, F(800, 7), G900);
+    cx0 += cols[i].w;
+  });
+  if (!list.length) {
+    text('Nenhum cadastro neste mês.', W / 2, yRows + 20 + 20, F(700, 9), MUTED, 'center');
+  }
+  let ry = yRows + 20;
+  cells.forEach((cs, ri) => {
+    const rh = rowH(cs);
+    if (ri % 2 === 1) { ctx.fillStyle = '#fbfdf8'; ctx.fillRect(PAD, ry, CW, rh); }
+    let cx = PAD;
+    cs.forEach((lines, ci) => {
+      if (ci === 2) {
+        lines.forEach((ln, li) => text(ln, cx + 5, ry + 12 + li * 11.5, F(800, 8.6), INK));
+      } else {
+        lines.forEach((ln, li) => text(ln, cx + 5, ry + 12 + li * 11.5, tableFont, INK));
+      }
+      cx += cols[ci].w;
+    });
+    ctx.strokeStyle = '#eef6e7'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD, ry + rh); ctx.lineTo(PAD + CW, ry + rh); ctx.stroke();
+    ry += rh;
+  });
+
+  ctx.strokeStyle = LINE; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(PAD, yFoot); ctx.lineTo(W - PAD, yFoot); ctx.stroke();
+  text('Credenciamento AMi Kinder · ' + settings.ministry, PAD, yFoot + 14, F(700, 8.5), '#555');
+  text('Total geral: ' + records.length + ' criança(s)', W - PAD, yFoot + 14, F(700, 8.5), '#555', 'right');
+
+  canvas.toBlob((blob) => {
+    if (!blob) { toast('Não foi possível gerar a imagem.', { danger: true }); return; }
+    downloadFile(blob, 'relatorio-ami-kinder-' + reportMonth + '.png');
+    toast('Imagem exportada.');
+  }, 'image/png');
+}
 
 /* ---------- lesson of the day ---------- */
 function renderLesson() {
