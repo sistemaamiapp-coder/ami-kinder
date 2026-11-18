@@ -46,7 +46,7 @@ create or replace function public.ak_session_admin(p_token text)
 returns uuid
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select s.user_id
   from ak_sessions s
@@ -58,7 +58,7 @@ create or replace function public.ak_public_state()
 returns jsonb
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select jsonb_build_object('hasUsers', exists (select 1 from ak_users));
 $$;
@@ -67,7 +67,7 @@ create or replace function public.ak_bootstrap(p_name text, p_email text, p_pass
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   new_user public.ak_users;
@@ -97,7 +97,7 @@ create or replace function public.ak_login(p_email text, p_pass text)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   u public.ak_users;
@@ -123,7 +123,7 @@ create or replace function public.ak_session_user(p_token text)
 returns jsonb
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   select coalesce(
     (
@@ -140,7 +140,7 @@ create or replace function public.ak_logout(p_token text)
 returns void
 language sql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
   delete from ak_sessions where token = p_token;
 $$;
@@ -149,7 +149,7 @@ create or replace function public.ak_admin_list(p_token text)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 begin
   if ak_session_admin(p_token) is null then
@@ -171,7 +171,7 @@ create or replace function public.ak_admin_create(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   new_user public.ak_users;
@@ -204,7 +204,7 @@ create or replace function public.ak_admin_update(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   admin_id uuid;
@@ -265,7 +265,7 @@ create or replace function public.ak_admin_delete(p_token text, p_id uuid)
 returns jsonb
 language plpgsql
 security definer
-set search_path = public
+set search_path = public, extensions
 as $$
 declare
   admin_id uuid;

@@ -31,8 +31,8 @@ const ICONS = {
 /* ---------- contas na nuvem (Supabase) ---------- */
 // Preencha com os dados do seu projeto Supabase (ver supabase-setup.sql).
 // A chave abaixo é a chave pública "anon/publishable"; ela pode ficar no site.
-const CLOUD_URL = '';
-const CLOUD_KEY = '';
+const CLOUD_URL = 'https://uanrqgnsrfvcxdwtenjy.supabase.co';
+const CLOUD_KEY = 'sb_publishable_fG0B8csKs73RiZwcEQoOAg_zT_Jx2jE';
 function cloudReady() { return /^https:\/\/.+\.supabase\.co$/.test(CLOUD_URL) && CLOUD_KEY.length > 20; }
 async function rpc(fn, args) {
   const res = await fetch(CLOUD_URL + '/rest/v1/rpc/' + fn, {
