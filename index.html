@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=6">
+<link rel="stylesheet" href="styles.css?v=7">
 </head>
 <body>
 
@@ -37,7 +37,7 @@
         </div>
       </div>
       <small class="err" id="errLogin"></small>
-      <button class="btn btn-primary btn-block" type="submit"><span data-ico="login"></span>Entrar</button>
+      <button id="loginBtn" class="btn btn-primary btn-block" type="submit"><span data-ico="login"></span>Entrar</button>
     </form>
 
     <form id="setupForm" hidden novalidate>
@@ -61,10 +61,10 @@
         <input id="setupPass2" type="password" autocomplete="new-password" placeholder="Repita a senha" maxlength="60">
       </div>
       <small class="err" id="errSetup"></small>
-      <button class="btn btn-primary btn-block" type="submit"><span data-ico="shield"></span>Criar administrador e entrar</button>
+      <button id="setupBtn" class="btn btn-primary btn-block" type="submit"><span data-ico="shield"></span>Criar administrador e entrar</button>
     </form>
 
-    <p class="auth-note" id="authNote">Primeiro acesso neste computador: crie a conta de administrador. Depois você poderá cadastrar administradores, professores, apoio e credenciamento.</p>
+    <p class="auth-note" id="authNote">Sua conta funciona em qualquer aparelho ou navegador com internet.</p>
   </div>
 </div>
 
@@ -371,6 +371,6 @@
   <div id="confetti" aria-hidden="true"></div>
 </div>
 <div id="print-root" aria-hidden="true"></div>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

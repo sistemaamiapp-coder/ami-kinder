@@ -28,57 +28,45 @@ const ICONS = {
   utensils: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>'
 };
 
-/* ---------- SHA-256 (local, síncrono) ---------- */
-function sha256(input) {
-  const K = [
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
-  ];
-  const bytes = new TextEncoder().encode(input);
-  const H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
-  const l = bytes.length;
-  const padded = new Uint8Array((((l + 8) >> 6) << 6) + 64);
-  padded.set(bytes);
-  padded[l] = 0x80;
-  const dv = new DataView(padded.buffer);
-  dv.setUint32(padded.length - 8, Math.floor((l * 8) / 4294967296));
-  dv.setUint32(padded.length - 4, (l * 8) >>> 0);
-  const rr = (x, n) => (x >>> n) | (x << (32 - n));
-  const w = new Uint32Array(64);
-  for (let i = 0; i < padded.length; i += 64) {
-    for (let t = 0; t < 16; t++) w[t] = dv.getUint32(i + t * 4);
-    for (let t = 16; t < 64; t++) {
-      const s0 = rr(w[t - 15], 7) ^ rr(w[t - 15], 18) ^ (w[t - 15] >>> 3);
-      const s1 = rr(w[t - 2], 17) ^ rr(w[t - 2], 19) ^ (w[t - 2] >>> 10);
-      w[t] = (w[t - 16] + s0 + w[t - 7] + s1) >>> 0;
-    }
-    let a = H[0], b = H[1], c = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
-    for (let t = 0; t < 64; t++) {
-      const S1 = rr(e, 6) ^ rr(e, 11) ^ rr(e, 25);
-      const ch = (e & f) ^ (~e & g);
-      const t1 = (h + S1 + ch + K[t] + w[t]) >>> 0;
-      const S0 = rr(a, 2) ^ rr(a, 13) ^ rr(a, 22);
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (S0 + maj) >>> 0;
-      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
-    }
-    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
-    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
-  }
-  return H.map((x) => x.toString(16).padStart(8, '0')).join('');
+/* ---------- contas na nuvem (Supabase) ---------- */
+// Preencha com os dados do seu projeto Supabase (ver supabase-setup.sql).
+// A chave abaixo é a chave pública "anon/publishable"; ela pode ficar no site.
+const CLOUD_URL = '';
+const CLOUD_KEY = '';
+function cloudReady() { return /^https:\/\/.+\.supabase\.co$/.test(CLOUD_URL) && CLOUD_KEY.length > 20; }
+async function rpc(fn, args) {
+  const res = await fetch(CLOUD_URL + '/rest/v1/rpc/' + fn, {
+    method: 'POST',
+    headers: {
+      apikey: CLOUD_KEY,
+      Authorization: 'Bearer ' + CLOUD_KEY,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(args || {})
+  });
+  if (!res.ok) throw new Error('cloud-' + res.status);
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+function cloudError(r) {
+  const map = {
+    email: 'Este e-mail já está cadastrado.',
+    password: 'A senha precisa ter pelo menos 6 caracteres.',
+    name: 'Informe o nome do usuário.',
+    inactive: 'Usuário desativado. Fale com um administrador.',
+    self: 'Você não pode alterar o próprio papel ou status.',
+    lastadmin: 'Este é o único administrador ativo. Promova outro administrador antes de alterá-lo.',
+    forbidden: 'Sua sessão expirou. Entre novamente.',
+    notfound: 'Usuário não encontrado. Atualize a lista e tente de novo.',
+    exists: 'Já existe uma conta cadastrada.'
+  };
+  return (r && map[r.error]) || 'Não foi possível concluir. Tente novamente.';
 }
 
 /* ---------- storage ---------- */
 const LS_RECORDS = 'ak-records-v1';
 const LS_META = 'ak-meta-v1';
 const LS_SEED = 'ak-seeded-v1';
-const LS_USERS = 'ak-users-v1';
 const LS_SESSION = 'ak-session-v1';
 const LS_SETTINGS = 'ak-settings-v1';
 const LS_VIEW = 'ak-view-v1';
@@ -101,11 +89,13 @@ function loadJSON(key, fallback) {
 }
 let records = loadJSON(LS_RECORDS, []);
 let meta = loadJSON(LS_META, { next: 1 });
-let users = loadJSON(LS_USERS, []);
+let users = [];
 let settings = Object.assign({ ministry: 'Ministério Infantil', phoneRequired: true, userCanEdit: true, userCanDelete: false }, loadJSON(LS_SETTINGS, {}));
 let lessons = loadJSON(LS_LESSONS, {});
 let lessonTab = 'bercario';
 let session = loadJSON(LS_SESSION, null);
+let authHasUsers = true;
+let authConnError = false;
 let editingId = null;
 let drawerId = null;
 let adminOpen = false;
@@ -122,20 +112,28 @@ function saveRecords() {
   localStorage.setItem(LS_RECORDS, JSON.stringify(records));
   localStorage.setItem(LS_META, JSON.stringify(meta));
 }
-function saveUsers() { localStorage.setItem(LS_USERS, JSON.stringify(users)); }
 function saveSettings() { localStorage.setItem(LS_SETTINGS, JSON.stringify(settings)); }
 function saveLessons() { localStorage.setItem(LS_LESSONS, JSON.stringify(lessons)); }
 function saveView() { localStorage.setItem(LS_VIEW, JSON.stringify({ filter: state.filter, sort: state.sort })); }
 function uid() {
   return (crypto.randomUUID && crypto.randomUUID()) || 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2);
 }
-function makeSalt() {
-  return Array.from(crypto.getRandomValues(new Uint8Array(8))).map((b) => b.toString(16).padStart(2, '0')).join('');
+function normalizeUser(u) {
+  return {
+    id: u.id,
+    name: u.name,
+    username: u.email,
+    role: u.role,
+    active: u.active,
+    createdAt: Date.parse(u.createdAt) || Date.now()
+  };
 }
-function hashPass(salt, pass) { return sha256(salt + ':' + pass); }
 function currentUser() {
-  if (!session) return null;
-  return users.find((u) => u.id === session.userId && u.active) || null;
+  return session && session.user && session.user.active ? session.user : null;
+}
+function saveSession() {
+  if (session) localStorage.setItem(LS_SESSION, JSON.stringify(session));
+  else localStorage.removeItem(LS_SESSION);
 }
 function isAdmin() { const u = currentUser(); return !!u && u.role === 'admin'; }
 function isTeacher() { const u = currentUser(); return !!u && (u.role === 'admin' || u.role === 'prof'); }
@@ -214,15 +212,21 @@ function syncScrollLock() {
 function showAuth() {
   $('#app').hidden = true;
   $('#authScreen').hidden = false;
-  const first = users.length === 0;
+  const first = !authHasUsers;
   $('#loginForm').hidden = first;
   $('#setupForm').hidden = !first;
   $('#authSub').textContent = first
-    ? 'Primeiro acesso: crie a conta de administrador deste computador.'
+    ? 'Primeiro acesso: crie a conta de administrador.'
     : 'Entre com seu e-mail e senha para acessar os cadastros.';
-  $('#authNote').textContent = first
-    ? 'Depois você poderá cadastrar administradores, professores, apoio e credenciamento em Administração.'
-    : 'Contas e cadastros ficam salvos neste navegador/computador.';
+  if (first) {
+    $('#authNote').textContent = 'A conta fica salva na nuvem e funciona em qualquer aparelho. Depois você cadastra administradores, professores, apoio e credenciamento em Administração.';
+  } else if (!cloudReady()) {
+    $('#authNote').textContent = 'Banco de contas ainda não configurado neste site.';
+  } else if (authConnError) {
+    $('#authNote').textContent = 'Sem conexão com o banco de contas. Verifique a internet e tente novamente.';
+  } else {
+    $('#authNote').textContent = 'Sua conta funciona em qualquer aparelho ou navegador com internet.';
+  }
   $('#errLogin').textContent = '';
   $('#errSetup').textContent = '';
   $('#loginPass').value = '';
@@ -251,8 +255,10 @@ function applySettingsText() {
   $('#phoneReq').hidden = !settings.phoneRequired;
 }
 function logout() {
+  const token = session && session.token;
+  if (token && cloudReady()) rpc('ak_logout', { p_token: token }).catch(() => {});
   session = null;
-  localStorage.removeItem(LS_SESSION);
+  saveSession();
   closeDrawer();
   closeAdmin();
   showAuth();
@@ -260,11 +266,10 @@ function logout() {
   $('#loginUser').focus();
 }
 
-$('#loginForm').addEventListener('submit', (e) => {
+$('#loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const uname = $('#loginUser').value.trim().toLowerCase();
   const pass = $('#loginPass').value;
-  const u = users.find((x) => x.username === uname);
   const fail = (msg) => {
     $('#errLogin').textContent = msg;
     $('#loginUser').classList.add('invalid');
@@ -274,15 +279,29 @@ $('#loginForm').addEventListener('submit', (e) => {
     void card.offsetWidth;
     card.classList.add('shake');
   };
-  if (!u || u.hash !== hashPass(u.salt, pass)) return fail('E-mail ou senha incorretos.');
-  if (!u.active) return fail('Usuário desativado. Fale com um administrador.');
-  session = { userId: u.id };
-  localStorage.setItem(LS_SESSION, JSON.stringify(session));
-  enterApp();
-  toast('Bem-vindo(a), ' + u.name + '!');
+  if (!cloudReady()) return fail('Banco de contas ainda não configurado neste site.');
+  const btn = $('#loginBtn');
+  btn.disabled = true;
+  try {
+    const r = await rpc('ak_login', { p_email: uname, p_pass: pass });
+    if (!r || !r.ok) {
+      authConnError = false;
+      return fail(r && r.error === 'inactive' ? 'Usuário desativado. Fale com um administrador.' : 'E-mail ou senha incorretos.');
+    }
+    session = { token: r.token, user: r.user };
+    saveSession();
+    authHasUsers = true;
+    enterApp();
+    toast('Bem-vindo(a), ' + r.user.name + '!');
+  } catch {
+    authConnError = true;
+    fail('Não foi possível conectar ao banco de contas. Verifique a internet.');
+  } finally {
+    btn.disabled = false;
+  }
 });
 
-$('#setupForm').addEventListener('submit', (e) => {
+$('#setupForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const name = $('#setupName').value.trim();
   const uname = $('#setupUser').value.trim().toLowerCase();
@@ -298,15 +317,31 @@ $('#setupForm').addEventListener('submit', (e) => {
   if (!isLoginOk(uname)) return fail('#setupUser', 'E-mail inválido: use de 3 a 60 caracteres, sem espaços (ex.: nome@email.com).');
   if (pass.length < 6) return fail('#setupPass', 'A senha precisa ter pelo menos 6 caracteres.');
   if (pass !== pass2) return fail('#setupPass2', 'As senhas não conferem: digite exatamente a mesma senha nos dois campos.');
-  const salt = makeSalt();
-  const u = { id: uid(), name, username: uname, role: 'admin', active: true, salt, hash: hashPass(salt, pass), createdAt: Date.now() };
-  users.push(u);
-  saveUsers();
-  session = { userId: u.id };
-  localStorage.setItem(LS_SESSION, JSON.stringify(session));
-  enterApp();
-  confetti($('#submitBtn'));
-  toast('Administrador criado. Você já pode cadastrar a equipe em Administração.');
+  if (!cloudReady()) return fail(null, 'Banco de contas ainda não configurado neste site.');
+  const btn = $('#setupBtn');
+  btn.disabled = true;
+  try {
+    const r = await rpc('ak_bootstrap', { p_name: name, p_email: uname, p_pass: pass });
+    if (!r || !r.ok) {
+      if (r && r.error === 'exists') {
+        authHasUsers = true;
+        showAuth();
+        $('#errLogin').textContent = 'Este sistema já tem contas. Entre com seu e-mail e senha.';
+        return;
+      }
+      return fail(null, cloudError(r));
+    }
+    session = { token: r.token, user: r.user };
+    saveSession();
+    authHasUsers = true;
+    enterApp();
+    confetti($('#submitBtn'));
+    toast('Administrador criado. Você já pode cadastrar a equipe em Administração.');
+  } catch {
+    fail(null, 'Não foi possível conectar ao banco de contas. Verifique a internet.');
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 document.querySelectorAll('#loginForm input').forEach((inp) => {
@@ -749,17 +784,33 @@ $('#drawer').addEventListener('click', (e) => {
 $('#drawerOverlay').addEventListener('click', closeDrawer);
 
 /* ---------- admin ---------- */
-function openAdmin() {
+async function refreshUsers() {
+  if (!session || !cloudReady()) return false;
+  try {
+    const r = await rpc('ak_admin_list', { p_token: session.token });
+    if (r && r.ok) {
+      users = (r.users || []).map(normalizeUser);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+async function openAdmin() {
   if (!isAdmin()) return;
   closeDrawer();
   adminOpen = true;
   adminEditingId = null;
-  showUserList();
-  loadSettingsForm();
-  switchTab('users');
   $('#adminPanel').classList.add('open');
   $('#adminOverlay').classList.add('show');
+  switchTab('users');
+  loadSettingsForm();
+  $('#userListView').hidden = false;
+  $('#userForm').hidden = true;
+  $('#usersList').innerHTML = '<p class="user-loading">Carregando usuários…</p>';
+  $('#usersCount').textContent = '';
   syncScrollLock();
+  await refreshUsers();
+  if (adminOpen) renderUsers();
 }
 function closeAdmin() {
   adminOpen = false;
@@ -839,7 +890,7 @@ function openUserForm(id) {
 }
 $('#ufCancel').addEventListener('click', showUserList);
 
-$('#userForm').addEventListener('submit', (e) => {
+$('#userForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!isAdmin()) return;
   const err = $('#errUserForm');
@@ -866,45 +917,56 @@ $('#userForm').addEventListener('submit', (e) => {
     err.textContent = 'Este é o único administrador ativo. Promova outro administrador antes de alterá-lo.';
     return;
   }
-  if (u) {
-    u.name = name;
-    u.username = uname;
-    u.role = finalRole;
-    u.active = finalActive;
-    if (pass) { u.salt = makeSalt(); u.hash = hashPass(u.salt, pass); }
-    toast('Usuário ' + name + ' atualizado.');
-  } else {
-    const salt = makeSalt();
-    users.push({ id: uid(), name, username: uname, role, active, salt, hash: hashPass(salt, pass), createdAt: Date.now() });
-    toast('Usuário ' + name + ' criado com sucesso.');
+  const btn = $('#userForm button[type="submit"]');
+  btn.disabled = true;
+  try {
+    let r;
+    if (u) {
+      r = await rpc('ak_admin_update', {
+        p_token: session.token, p_id: u.id, p_name: name, p_email: uname,
+        p_role: finalRole, p_active: finalActive, p_pass: pass || null
+      });
+    } else {
+      r = await rpc('ak_admin_create', {
+        p_token: session.token, p_name: name, p_email: uname, p_pass: pass, p_role: role
+      });
+    }
+    if (!r || !r.ok) { err.textContent = cloudError(r); return; }
+    if (u && u.id === me.id) {
+      session.user = r.user;
+      saveSession();
+    }
+    await refreshUsers();
+    renderUsers();
+    showUserList();
+    enterApp();
+    toast(u ? 'Usuário ' + name + ' atualizado.' : 'Usuário ' + name + ' criado com sucesso.');
+  } catch {
+    err.textContent = 'Não foi possível conectar ao banco de contas. Verifique a internet.';
+  } finally {
+    btn.disabled = false;
   }
-  saveUsers();
-  renderUsers();
-  showUserList();
-  enterApp();
 });
 
-function removeUser(id) {
+async function removeUser(id) {
   if (!isAdmin()) return;
   const me = currentUser();
-  const idx = users.findIndex((x) => x.id === id);
-  if (idx < 0) return;
-  const u = users[idx];
-  if (u.id === me.id) return;
+  const u = users.find((x) => x.id === id);
+  if (!u || u.id === me.id) return;
   if (u.role === 'admin' && u.active && activeAdmins().length === 1) return;
-  users.splice(idx, 1);
-  saveUsers();
-  renderUsers();
-  toast('Usuário ' + u.name + ' excluído.', {
-    danger: true,
-    actionLabel: 'Desfazer',
-    onAction: () => {
-      users.splice(Math.min(idx, users.length), 0, u);
-      saveUsers();
-      renderUsers();
-      toast('Usuário ' + u.name + ' restaurado.');
+  if (!window.confirm('Excluir o usuário ' + u.name + '? Ele perderá o acesso em todos os aparelhos.')) return;
+  try {
+    const r = await rpc('ak_admin_delete', { p_token: session.token, p_id: id });
+    if (!r || !r.ok) {
+      toast(cloudError(r), { danger: true });
+      return;
     }
-  });
+    await refreshUsers();
+    renderUsers();
+    toast('Usuário ' + u.name + ' excluído.', { danger: true });
+  } catch {
+    toast('Não foi possível conectar ao banco de contas. Verifique a internet.', { danger: true });
+  }
 }
 
 function loadSettingsForm() {
@@ -996,7 +1058,36 @@ document.querySelectorAll('[data-ico]').forEach((el) => { el.innerHTML = ICONS[e
 $('#formIcon').innerHTML = ICONS.plus;
 $('#filterAllergy').value = state.filter;
 $('#sortBy').value = state.sort;
-seedIfNeeded();
-render();
-if (currentUser()) enterApp();
-else showAuth();
+
+async function boot() {
+  seedIfNeeded();
+  render();
+  if (cloudReady()) {
+    try {
+      const st = await rpc('ak_public_state');
+      authHasUsers = !!(st && st.hasUsers);
+      authConnError = false;
+    } catch {
+      authConnError = true;
+      authHasUsers = true;
+    }
+  } else {
+    authConnError = true;
+    authHasUsers = true;
+  }
+  if (session && session.token && currentUser() && cloudReady()) {
+    try {
+      const u = await rpc('ak_session_user', { p_token: session.token });
+      if (u) {
+        session.user = u;
+        saveSession();
+      } else {
+        session = null;
+        saveSession();
+      }
+    } catch {}
+  }
+  if (currentUser()) enterApp();
+  else showAuth();
+}
+boot();

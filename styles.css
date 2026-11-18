@@ -339,6 +339,7 @@ input.invalid,textarea.invalid,select.invalid{border-color:#e0453a!important;box
 .users-toolbar p{flex:1;color:var(--muted);font-weight:800;font-size:.8rem}
 .users-toolbar .btn{flex:none}
 .users-list{display:flex;flex-direction:column;gap:10px}
+.user-loading{color:var(--muted);font-weight:800;font-size:.85rem;padding:8px 2px}
 .user-row{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--line);border-radius:15px;padding:12px 14px;animation:rowIn .3s ease both}
 .user-row .avatar{width:38px;height:38px;font-size:.85rem}
 .user-main{flex:1;min-width:0}
