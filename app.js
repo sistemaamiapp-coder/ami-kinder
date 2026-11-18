@@ -25,7 +25,8 @@ const ICONS = {
   sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h10M18 18h2"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></svg>',
   whatsapp: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>',
-  utensils: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>'
+  utensils: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><rect x="7" y="12" width="3" height="5" rx="1"/><rect x="12" y="8" width="3" height="9" rx="1"/><rect x="17" y="6" width="3" height="11" rx="1"/></svg>'
 };
 
 /* ---------- contas na nuvem (Supabase) ---------- */
@@ -825,7 +826,9 @@ function switchTab(tab) {
     t.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   $('#tabUsers').hidden = tab !== 'users';
+  $('#tabReport').hidden = tab !== 'report';
   $('#tabSettings').hidden = tab !== 'settings';
+  if (tab === 'report') openReportTab();
 }
 document.querySelectorAll('.admin-tabs .tab').forEach((t) => t.addEventListener('click', () => switchTab(t.dataset.tab)));
 $('#adminBtn').addEventListener('click', openAdmin);
@@ -985,6 +988,155 @@ $('#saveSettings').addEventListener('click', () => {
   applySettingsText();
   render();
   toast('Configurações salvas.');
+});
+
+/* ---------- monthly report (admin only) ---------- */
+const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+let reportMonth = ymOf(Date.now());
+function ymOf(ts) {
+  const d = new Date(ts);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function monthTitle(ym) {
+  const parts = ym.split('-').map(Number);
+  return MONTH_NAMES[parts[1] - 1] + ' de ' + parts[0];
+}
+function reportMonthOptions() {
+  const set = new Set([ymOf(Date.now())]);
+  records.forEach((r) => { if (r.createdAt) set.add(ymOf(r.createdAt)); });
+  return [...set].sort().reverse();
+}
+function recordsOfMonth(ym) {
+  return records.filter((r) => r.createdAt && ymOf(r.createdAt) === ym).sort((a, b) => a.createdAt - b.createdAt);
+}
+function lastMonths(n) {
+  const out = [];
+  const now = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    out.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+  }
+  return out;
+}
+function reportStats(list) {
+  const s = { total: list.length, allergy: 0, food: 0, whats: 0, groups: { bercario: 0, junior: 0, bigger: 0, none: 0 } };
+  list.forEach((r) => {
+    if (r.hasAllergy) s.allergy++;
+    if (r.foodNote && r.foodNote.trim()) s.food++;
+    if (phoneDigits(r.guardianPhone).length >= 10) s.whats++;
+    s.groups[r.group && GROUPS[r.group] ? r.group : 'none']++;
+  });
+  return s;
+}
+function repStatCard(label, n) {
+  return '<div class="rep-stat"><span class="rep-stat-n">' + n + '</span><span class="rep-stat-l">' + label + '</span></div>';
+}
+function barsHTML(ymList, activeYm) {
+  const counts = ymList.map((ym) => records.filter((r) => r.createdAt && ymOf(r.createdAt) === ym).length);
+  const max = Math.max(1, ...counts);
+  return ymList.map((ym, i) => {
+    const pct = Math.round((counts[i] / max) * 100);
+    const parts = ym.split('-').map(Number);
+    const lbl = MONTH_NAMES[parts[1] - 1].slice(0, 3) + (parts[1] === 1 ? '/' + String(parts[0]).slice(2) : '');
+    return '<div class="rep-bar' + (ym === activeYm ? ' active' : '') + '" title="' + monthTitle(ym) + ': ' + counts[i] + ' cadastro(s)">' +
+      '<span class="rep-bar-val">' + counts[i] + '</span>' +
+      '<div class="rep-bar-track"><div class="rep-bar-fill" style="height:' + (counts[i] ? Math.max(pct, 4) : 2) + '%"></div></div>' +
+      '<span class="rep-bar-lbl">' + lbl + '</span></div>';
+  }).join('');
+}
+function classesHTML(list) {
+  const s = reportStats(list);
+  const rows = ['bercario', 'junior', 'bigger'].map((g) => ({ key: g, label: GROUPS[g].label, n: s.groups[g] }));
+  if (s.groups.none) rows.push({ key: 'none', label: 'Sem turma', n: s.groups.none });
+  const total = Math.max(1, list.length);
+  return rows.map((r) => {
+    const pct = Math.round((r.n / total) * 100);
+    return '<div class="rep-class-row"><span class="rep-class-lbl">' + r.label + '</span>' +
+      '<span class="rep-class-track"><span class="rep-class-fill g-' + r.key + '" style="width:' + (r.n ? Math.max(pct, 3) : 0) + '%"></span></span>' +
+      '<span class="rep-class-n">' + r.n + '</span></div>';
+  }).join('');
+}
+function repLessonsHTML() {
+  return Object.keys(GROUPS).map((g) => {
+    const l = lessons[g];
+    return '<div class="rep-lesson"><span class="rep-lesson-tag g-' + g + '">' + GROUPS[g].label + '</span>' +
+      (l ? '<span class="rep-lesson-text">' + esc(l.text) + '</span><span class="rep-lesson-meta">' + esc(l.by) + ' · ' + fmtDate(l.at) + '</span>'
+        : '<span class="rep-lesson-text muted">Sem lição registrada</span>') + '</div>';
+  }).join('');
+}
+function reportTableHTML(list) {
+  const head = '<thead><tr><th>Data</th><th>Código</th><th>Criança</th><th>Turma</th><th>Responsável</th><th>Vínculo</th><th>Telefone</th><th>Alergia</th><th>Alimentação</th></tr></thead>';
+  const rows = list.map((r) => {
+    const d = new Date(r.createdAt);
+    const when = d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const allergy = r.hasAllergy ? 'Sim — ' + esc(r.allergyDesc) : 'Não';
+    const food = r.foodNote && r.foodNote.trim() ? esc(r.foodNote.trim()) : '—';
+    return '<tr><td>' + when + '</td><td>' + esc(r.code) + '</td><td><strong>' + esc(r.childName) + '</strong></td>' +
+      '<td>' + esc(groupLabel(r) || '—') + '</td><td>' + esc(r.guardianName) + '</td><td>' + esc(relText(r)) + '</td>' +
+      '<td>' + esc(r.guardianPhone || '—') + '</td><td>' + allergy + '</td><td>' + food + '</td></tr>';
+  }).join('');
+  return head + '<tbody>' + (rows || '<tr><td colspan="9" class="rep-empty">Nenhum cadastro neste mês.</td></tr>') + '</tbody>';
+}
+function openReportTab() {
+  if (!isAdmin()) return;
+  const opts = reportMonthOptions();
+  if (!opts.includes(reportMonth)) reportMonth = ymOf(Date.now());
+  const sel = $('#reportMonth');
+  sel.innerHTML = opts.map((ym) => '<option value="' + ym + '">' + monthTitle(ym) + '</option>').join('');
+  sel.value = reportMonth;
+  renderReport();
+}
+function renderReport() {
+  if (!isAdmin()) return;
+  const list = recordsOfMonth(reportMonth);
+  const s = reportStats(list);
+  $('#repCards').innerHTML = repStatCard('Crianças no mês', s.total) + repStatCard('Total cadastrado', records.length) +
+    repStatCard('Com alergia', s.allergy) + repStatCard('Observação alimentar', s.food) + repStatCard('Com WhatsApp', s.whats);
+  $('#repChart').innerHTML = barsHTML(lastMonths(12), reportMonth);
+  $('#repClasses').innerHTML = classesHTML(list);
+  $('#repLessons').innerHTML = repLessonsHTML();
+  $('#repTableCount').textContent = list.length + (list.length === 1 ? ' cadastro' : ' cadastros');
+  $('#repTable').innerHTML = reportTableHTML(list);
+}
+$('#reportMonth').addEventListener('change', () => {
+  reportMonth = $('#reportMonth').value;
+  renderReport();
+});
+$('#reportPrint').addEventListener('click', () => {
+  if (!isAdmin()) return;
+  const list = recordsOfMonth(reportMonth);
+  const s = reportStats(list);
+  const now = new Date();
+  const stats = [
+    ['Crianças no mês', s.total], ['Total cadastrado', records.length], ['Com alergia', s.allergy],
+    ['Observação alimentar', s.food], ['Com WhatsApp', s.whats]
+  ];
+  $('#reportRoot').innerHTML =
+    '<article class="report-print">' +
+      '<header class="rpt-head"><img class="rpt-logo" src="assets/ami-kinder.jpg" alt="">' +
+        '<div class="rpt-titles"><h1>Credenciamento AMi Kinder</h1><p>' + esc(settings.ministry) + '</p></div>' +
+        '<div class="rpt-when"><strong>Relatório mensal</strong><span>' + monthTitle(reportMonth) + '</span>' +
+        '<small>Gerado em ' + now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '</small></div>' +
+      '</header>' +
+      '<section class="rpt-stats">' + stats.map((x) => '<div class="rpt-stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>').join('') + '</section>' +
+      '<section class="rpt-section"><h2>Crianças cadastradas por mês</h2><div class="rep-bars">' + barsHTML(lastMonths(12), reportMonth) + '</div></section>' +
+      '<div class="rpt-two">' +
+        '<section class="rpt-section"><h2>Por turma</h2><div class="rep-classes">' + classesHTML(list) + '</div></section>' +
+        '<section class="rpt-section"><h2>Lição do dia</h2><div class="rep-lessons">' + repLessonsHTML() + '</div></section>' +
+      '</div>' +
+      '<section class="rpt-section"><h2>Detalhes dos cadastros — ' + monthTitle(reportMonth) + '</h2>' +
+        '<table class="rep-table">' + reportTableHTML(list) + '</table></section>' +
+      '<footer class="rpt-foot"><span>Credenciamento AMi Kinder · ' + esc(settings.ministry) + '</span>' +
+        '<span>Total geral: ' + records.length + ' criança(s)</span></footer>' +
+    '</article>';
+  const cleanup = () => {
+    document.body.classList.remove('printing-report');
+    $('#reportRoot').innerHTML = '';
+    window.removeEventListener('afterprint', cleanup);
+  };
+  document.body.classList.add('printing-report');
+  window.addEventListener('afterprint', cleanup);
+  window.print();
 });
 
 /* ---------- lesson of the day ---------- */

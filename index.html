@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 
@@ -270,12 +270,13 @@
       <span class="head-icon head-purple" data-ico="shield"></span>
       <div class="grow">
         <h2>Administração</h2>
-        <p>Usuários, permissões e configurações do app.</p>
+        <p>Usuários, relatório mensal, permissões e configurações do app.</p>
       </div>
       <button class="icon-btn" id="adminClose" aria-label="Fechar administração"><span data-ico="x"></span></button>
     </div>
     <div class="admin-tabs" role="tablist">
       <button class="tab active" data-tab="users" role="tab" aria-selected="true"><span data-ico="users"></span>Usuários</button>
+      <button class="tab" data-tab="report" role="tab" aria-selected="false"><span data-ico="chart"></span>Relatório</button>
       <button class="tab" data-tab="settings" role="tab" aria-selected="false"><span data-ico="sliders"></span>Configurações</button>
     </div>
     <div class="admin-body">
@@ -337,6 +338,34 @@
           </div>
         </form>
       </div>
+      <div id="tabReport" hidden>
+        <div class="report-toolbar">
+          <label class="report-month" for="reportMonth"><span>Mês do relatório</span>
+            <select id="reportMonth"></select>
+          </label>
+          <button class="btn btn-primary btn-sm" id="reportPrint"><span data-ico="printer"></span>Imprimir / PDF</button>
+        </div>
+        <div class="rep-cards" id="repCards"></div>
+        <div class="rep-grid">
+          <div class="rep-card">
+            <h3>Crianças cadastradas por mês <small>últimos 12 meses</small></h3>
+            <div class="rep-bars" id="repChart"></div>
+          </div>
+          <div class="rep-card">
+            <h3>Distribuição por turma <small>no mês selecionado</small></h3>
+            <div class="rep-classes" id="repClasses"></div>
+          </div>
+        </div>
+        <div class="rep-card">
+          <h3>Lição do dia <small>situação atual de cada turma</small></h3>
+          <div class="rep-lessons" id="repLessons"></div>
+        </div>
+        <div class="rep-card">
+          <h3>Detalhes dos cadastros <small id="repTableCount"></small></h3>
+          <div class="rep-table-wrap"><table class="rep-table" id="repTable"></table></div>
+        </div>
+        <p class="admin-note">O relatório usa os cadastros salvos neste aparelho. Para apresentações, use "Imprimir / PDF" e escolha "Salvar como PDF".</p>
+      </div>
       <div id="tabSettings" hidden>
         <div class="field">
           <label for="setMinistry">Nome do ministério</label>
@@ -371,6 +400,7 @@
   <div id="confetti" aria-hidden="true"></div>
 </div>
 <div id="print-root" aria-hidden="true"></div>
-<script src="app.js?v=7"></script>
+<div id="reportRoot" aria-hidden="true"></div>
+<script src="app.js?v=8"></script>
 </body>
 </html>
